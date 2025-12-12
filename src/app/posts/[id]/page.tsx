@@ -2,20 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import type { Post } from '@/types/Post';
 import Image from 'next/image';
 
 // メモ
 // URL のパラメータ（useParams で取れる id）は「文字列」扱い (string)
 // API から返ってくる post.id は「数字」(number)
-
-type Post = {
-  id: number,
-  title: string,
-  thumbnailUrl: string,
-  createdAt: string,
-  categories: string[],
-  content: string
-}
 
 type ApiResponse = {
   post: Post; // APIのJSONのpostの中には、Post型のデータが入っています

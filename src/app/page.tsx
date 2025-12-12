@@ -2,19 +2,11 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import type { Post } from '@/types/Post';
 
 // メモ
 // : Post[] 　変数に型を渡す
 //  <Post[]>　関数に型を渡す
-
-// APIから取得するデータの型を作っておく
-type Post = {
-  id: number,
-  title: string,
-  createdAt: string,
-  categories: string[],
-  content: string
-}
 
 // APIから取得しているJSONの形がオブジェクトなので型を浮くっておく
 type ApiResponse = {
