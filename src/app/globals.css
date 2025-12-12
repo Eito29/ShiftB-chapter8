@@ -25,3 +25,10 @@ body {
     text-wrap: balance;
   }
 }
+
+.container {
+  width: 100%;
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 1rem;
+}
