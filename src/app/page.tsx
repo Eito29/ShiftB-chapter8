@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import type { Post } from '@/types/Post';
+import type { Post } from '@/app/_types/Post';
 
 // メモ
 // : Post[] 　変数に型を渡す
