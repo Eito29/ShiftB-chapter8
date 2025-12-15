@@ -2,33 +2,42 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import type { Post } from '@/app/_types/Post';
+import type { MicroCmsPost } from '@/app/_types/MicroCmsPost';
 import Image from 'next/image';
 
 // メモ
 // URL のパラメータ（useParams で取れる id）は「文字列」扱い (string)
 // API から返ってくる post.id は「数字」(number)
 
-type ApiResponse = {
-  post: Post; // APIのJSONのpostの中には、Post型のデータが入っています
-};
+// ▽詳細の返り値例
+// {
+//   "id": "aaa",
+//   "title": "...",
+//   "createdAt": "...",
+//   "content": "..."
+// }
 
 const Detail = () => {
   // useParamsがURLの数字を読み取る
   // useParams は常に「string | undefined」を返す設計なのでここでいうidは文字列だよと示す
   const { id } = useParams<{ id: string }>();
   
-  // null を初期値にするならstateの型は Post | null
-  const [post, setPost] = useState<Post | null>(null);
+  const [post, setPost] = useState<MicroCmsPost | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const getData = async () => {
-      setLoading(true); // ローディング開始
-      const res = await fetch(`https://1hmfpsvto6.execute-api.ap-northeast-1.amazonaws.com/dev/posts/${id}`);
-      // 「このdataはApiResponseの型である」と示す。その後Post型として扱われる
-      const data: ApiResponse = await res.json(); // ※posts.jsとは中身が違うので注意（APIの方ではpostというオブジェクト名がある）
-      setPost(data.post);
+      setLoading(true);
+      const res = await fetch(
+        `https://eito8.microcms.io/api/v1/posts/${id}`,
+        {
+          headers: {
+            'X-MICROCMS-API-KEY': process.env.NEXT_PUBLIC_MICROCMS_API_KYE as string,
+          },
+        },
+      );
+      const data: MicroCmsPost = await res.json();
+      setPost(data);
       setLoading(false); // ローディング終了
     }
 
@@ -46,7 +55,7 @@ const Detail = () => {
   return (
     <div className='container'>
       <div className='block mb-5'>
-        <Image src={post.thumbnailUrl} width={800} height={400} alt={`${post.title}の画像`} />
+        <Image src={post.thumbnail.url} width={800} height={400} alt={`${post.title}の画像`} />
       </div>
       <div className='flex justify-between mb-2'>
         <div className="text-sm text-gray-500">
@@ -55,8 +64,9 @@ const Detail = () => {
         <div className="flex justify-between gap-2">
           {post.categories.map((category) => {
             return(
-              <div key={category} className="border border-solid border-blue-900 rounded p-1 text-blue-900">
-                {category}
+              // key={category.id} →　microCMSが保証する一意な値としてベストなのがid。nameなどは変更の可能性があるから。
+              <div key={category.id} className="border border-solid border-blue-900 rounded p-1 text-blue-900">
+                {category.name}
               </div>
             )
           })}
