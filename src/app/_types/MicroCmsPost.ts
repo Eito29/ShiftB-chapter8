@@ -1,5 +1,3 @@
-"use client"
-
 export type MicroCmsPost = { // 1記事の型
   id: string,
   title: string,
