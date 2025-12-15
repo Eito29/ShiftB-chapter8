@@ -2,32 +2,52 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import type { Post } from '@/app/_types/Post';
+import type { MicroCmsPost } from '@/app/_types/MicroCmsPost';
 
 // メモ
-// : Post[] 　変数に型を渡す
-//  <Post[]>　関数に型を渡す
+//  :***[] 　変数に型を渡す
+//  <***[]>　関数に型を渡す
 
-// APIから取得しているJSONの形がオブジェクトなので型を浮くっておく
+//microCMSについて
+// microCMS は 配列を直接返さない
+// 返ってくるのは オブジェクト
+// 記事配列は contents の中
+// posts は配列だけ欲しい
+// ▽一覧の返り値例
+// {
+//   "contents": [
+//     { "id": "aaa", "title": "...", ... }
+//   ],
+//   "totalCount": 10
+// }
+
+
 type ApiResponse = {
-  posts: Post[];
+  contents: MicroCmsPost[]; // 記事が複数入った配列（検証ツール>ットワーク>プレビュー）
 };
 
 export default function Home() {
-  const [posts, setPosts] = useState<Post[]>([]); // 空配列=true。
+  const [posts, setPosts] = useState<MicroCmsPost[]>([]); // 画面に表示する記事一覧
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const getData = async () => {
       setLoading(true);
-      const res = await fetch(`https://1hmfpsvto6.execute-api.ap-northeast-1.amazonaws.com/dev/posts`);
-      const data: ApiResponse = await res.json(); // 取得データ【dataのpostsオブジェクト】をsetPostsにセット
-      setPosts(data.posts);
+      const res = await fetch(
+        'https://eito8.microcms.io/api/v1/posts', // 管理画面で取得したエンドポイント
+        {
+          headers: { // fetch関数の第二引数にheadersを設定でき、その中にAPIキーを設定
+            'X-MICROCMS-API-KEY': process.env.NEXT_PUBLIC_MICROCMS_API_KYE as string, // .env.localで設定した環境変数（as stringは型エラー回避用）
+          },
+        }
+      )
+      const data: ApiResponse = await res.json();
+      setPosts(data.contents); // 記事配列（contents）だけを取り出してposts（MicroCmsPost[]）に入れている
       setLoading(false);
     }
 
-    getData();
-  }, []);
+    getData()
+  }, [])
 
   if (loading) {
     return <div>読み込み中…</div>
@@ -53,7 +73,7 @@ export default function Home() {
                 <div className="flex justify-between gap-2">
                   {post.categories.map((category) => {
                     return (
-                      <div key={category} className="border border-solid border-blue-900 rounded p-1 text-blue-900">{category}</div>
+                      <div key={category.id} className="border border-solid border-blue-900 rounded p-1 text-blue-900">{category.name}</div>
                     );
                   })}
                 </div>
