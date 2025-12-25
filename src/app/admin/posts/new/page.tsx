@@ -1,8 +1,7 @@
 "use client"
 
-import { Category } from "@/app/_types/Category";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PostForm } from "../_components/PostForm";
 
 export default function AdminNewPost() {
@@ -12,20 +11,8 @@ export default function AdminNewPost() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
-  const [allCategories, setAllCategories] = useState<Category[]>([]); // プルダウンに並べる全カテゴリー
   const [selectedCategoryId, setSelectedCategoryId] = useState<number>(0); // ユーザーが選んだカテゴリーID
   const [isLoading, setIsLoading] = useState(false);
-
-  // --- ② カテゴリー一覧をAPIから取得する
-  useEffect(() => {
-    const getCategories = async() => {
-      const res = await fetch("/api/admin/categories"); // カテゴリー一覧APIを叩く
-      const data = await res.json();
-
-      setAllCategories(data.categories); // 取得したカテゴリー配列をStateに入れる
-    }
-    getCategories();
-  }, []);
 
   // --- ③ ボタンを押した時の処理（handleSubmit） ---
   const handleSubmit = async () => {
@@ -77,7 +64,6 @@ export default function AdminNewPost() {
         setThumbnailUrl={setThumbnailUrl}
         selectedCategoryId={selectedCategoryId}
         setSelectedCategoryId={setSelectedCategoryId}
-        allCategories={allCategories}
         handleSubmit={handleSubmit}
         isLoading={isLoading}
       />

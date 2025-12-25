@@ -2,7 +2,6 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Category } from "@/app/_types/Category";
 import { PostForm } from "../_components/PostForm";
 
 export default function AdminPost() {
@@ -13,33 +12,23 @@ export default function AdminPost() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
-  const [allCategories, setAllCategories] = useState<Category[]>([]); // カテゴリー全選択肢用の箱
   const [selectedCategoryId, setSelectedCategoryId] = useState<number>(0); // 選択中カテゴリーIDの箱
   const [isLoading, setIsLoading] = useState(false);
 
   // 1. 最初にデータを読み込む（表示用）
   useEffect(() => {
     if (!id) return; // ← id 未確定ガード（不具合防止）
-    const fetchPost = async () => { // データ取得用の非同期関数
+    const fetchPost = async () => {
+      const res = await fetch(`/api/admin/posts/${id}`);
+      const data = await res.json();
 
-      const [postRes, catRes] = await Promise.all([ // Promise.allで「記事」と「全カテゴリ」を同時に取得
-        fetch(`/api/posts/${id}`), // 特定idの記事を取得
-        fetch(`/api/admin/categories`) // プルダウン用の全カテゴリーリストを取得
-      ]);
-
-      const postData = await postRes.json(); // 記事レスポンスをJSON化
-      const catData = await catRes.json(); // カテゴリレスポンスをJSON化
-
-      // 1. まず全カテゴリをセット（選択肢を作る）
-      setAllCategories(catData.categories); // [重要] 選択肢を先に用意しないと初期値が反映されない
-
-      // 2. 記事の各項目をセット
-      const post = postData.post; // dataの中にあるpostオブジェクトを取り出す
+      // 1. 記事の各項目をセット
+      const post = data.post; // dataの中にあるpostオブジェクトを取り出す
       setTitle(post.title); // タイトルをセット
       setContent(post.content); // 内容をセット
       setThumbnailUrl(post.thumbnailUrl); // サムネイルURLをセット
 
-      // ★ 3. 最後に「どれを選ぶか」をセットする
+      // 2. 最後に「どれを選ぶか」をセットする
       if (post.postCategories && post.postCategories.length > 0) {
         // 記事が現在持っているカテゴリーのIDをセット。これで「カテゴリ1」などが正しく選ばれる
         setSelectedCategoryId(post.postCategories[0].categoryId);
@@ -59,7 +48,7 @@ export default function AdminPost() {
     if (!isConfirmed) return;
 
     // ② 実際の削除処理を実行
-    const res = await fetch(`/api/posts/${id}`, {
+    const res = await fetch(`/api/admin/posts/${id}`, {
       method: "DELETE", // 削除リクエスト
     });
 
@@ -80,7 +69,7 @@ export default function AdminPost() {
    */
   const handleSubmit = async () => {
     // サーバーの更新用API(PUT)を叩く
-    const res = await fetch(`/api/posts/${id}`, {
+    const res = await fetch(`/api/admin/posts/${id}`, {
       method: "PUT", // 更新リクエスト
       headers: { "Content-Type": "application/json" }, // JSON形式であることを伝える
       // 画面上の全データと、選択されたカテゴリーIDをJSONにして送信
@@ -88,7 +77,7 @@ export default function AdminPost() {
         title,
         content,
         thumbnailUrl,
-        postCategories: [{ id: selectedCategoryId }] // APIが期待する配列形式で送る
+        categories: [{ id: selectedCategoryId }] // APIが期待する { id: number }[] の形式に合わせる
       }),
     });
 
@@ -115,7 +104,6 @@ export default function AdminPost() {
         setThumbnailUrl={setThumbnailUrl}
         selectedCategoryId={selectedCategoryId}
         setSelectedCategoryId={setSelectedCategoryId}
-        allCategories={allCategories}
         handleSubmit={handleSubmit}
         handleDelete={handleDelete}
         isLoading={isLoading}
