@@ -1,81 +1,71 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import type { MicroCmsPost } from '@/app/_types/MicroCmsPost';
-import Image from 'next/image';
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { PostType } from "../../_types/Post";
+import Image from "next/image";
 
-// メモ
-// URL のパラメータ（useParams で取れる id）は「文字列」扱い (string)
-// API から返ってくる post.id は「数字」(number)
-
-// ▽詳細の返り値例
-// {
-//   "id": "aaa",
-//   "title": "...",
-//   "createdAt": "...",
-//   "content": "..."
-// }
-
-const Detail = () => {
-  // useParamsがURLの数字を読み取る
-  // useParams は常に「string | undefined」を返す設計なのでここでいうidは文字列だよと示す
+export default function Post() {
+  // 1. URLから「どの記事か」を読み取る
+  // { id: "123" } のような形で入ってくるので、定数 id に代入。
   const { id } = useParams<{ id: string }>();
-  
-  const [post, setPost] = useState<MicroCmsPost | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
 
+  // 2. 記事データを入れる箱の準備
+  // 最初はデータがないので null（何もない）を入れておく。
+  // <PostType | null> は「記事データか、空っぽの状態のどちらかだよ」という意味。
+  const [post, setPost] = useState<PostType | null>(null);
+
+  // 3. IDを元に、特定の記事を1つだけ取ってくる
   useEffect(() => {
-    const getData = async () => {
-      setLoading(true);
-      const res = await fetch(
-        `https://eito8.microcms.io/api/v1/posts/${id}`,
-        {
-          headers: {
-            'X-MICROCMS-API-KEY': process.env.NEXT_PUBLIC_MICROCMS_API_KYE as string,
-          },
-        },
-      );
-      const data: MicroCmsPost = await res.json();
-      setPost(data);
-      setLoading(false); // ローディング終了
+    const fetchPost = async () => {
+      
+      // 指定されたIDを使って、APIに「この記事の詳細をちょうだい」とリクエスト
+      const res = await fetch(`/api/posts/${id}`);
+      const data = await res.json();
+
+      // APIから返ってきた「data.post」をsetPostに入れる
+      setPost(data.post);
+    };
+
+    // IDが存在するときだけ、データ取得を実行する
+    if (id) {
+      fetchPost();
     }
+  }, [id]); // 「URLのIDが変わったら、もう一度この作業をやり直してね」という合図。
 
-    getData();
-  }, [id]); // id が変わったときにもう一回実行
+  // 4. データの到着待ち（ガード）
+  // APIからデータが届くまでは null なので表示されるまで表示。
+  if (!post) return <div>読み込み中（Loading...）</div>;
 
-  if (loading) {
-    return <div>読み込み中…</div>
-  }
-
-  if (!post) {
-    return <div>データが見つかりませんでした。</div>;
-  }
-
+  // 5. 記事の表示
   return (
     <div className='container'>
       <div className='block mb-5'>
-        <Image src={post.thumbnail.url} width={800} height={400} alt={`${post.title}の画像`} />
+        {/* 画像の表示（存在チェックを入れて安全にする） */}
+        {post.thumbnailUrl && (
+          <Image src={post.thumbnailUrl} width={800} height={400} alt={`${post.title}の画像`} />
+        )}
       </div>
+
       <div className='flex justify-between mb-2'>
         <div className="text-sm text-gray-500">
-          {new Date(post.createdAt).toLocaleDateString()}
+            {new Date(post.createdAt).toLocaleDateString()}
         </div>
+
+        {/* カテゴリーの表示（中間テーブル経由） */}
         <div className="flex justify-between gap-2">
-          {post.categories.map((category) => {
-            return(
-              // key={category.id} →　microCMSが保証する一意な値としてベストなのがid。nameなどは変更の可能性があるから。
-              <div key={category.id} className="border border-solid border-blue-900 rounded p-1 text-blue-900">
-                {category.name}
+          {post.postCategories?.map((pc) => {
+            return (
+              <div key={pc.category.id} className="border border-solid border-blue-900 rounded p-1 text-blue-900">
+                {pc.category?.name}
               </div>
             )
           })}
         </div>
       </div>
+
       <h1 className="text-2xl mb-3">{post.title}</h1>
       <p dangerouslySetInnerHTML={{ __html: post.content}}></p>
     </div>
   );
 }
-
-export default Detail;
