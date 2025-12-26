@@ -64,6 +64,9 @@ export const POST = async (request: NextRequest, context: any) => {
     // [注意] 本来はcreateManyという一括保存メソッドがあるが、
     // 使用しているSQLiteではcreateManyが使えないため、for文で1つずつ実施する
     for (const category of categories) {
+      // IDが0（カテゴリー未選択）の場合は、保存をスキップ
+      if (category.id === 0) continue;
+
       await prisma.postCategory.create({
         data: {
           categoryId: category.id, // フロントから届いたカテゴリーID
