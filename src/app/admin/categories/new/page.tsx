@@ -1,12 +1,13 @@
 "use client"
 
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CategoryForm } from "../_components/CategoryForm";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 export default function AdminNewCategory() {  
-  const {id} = useParams();
   const router = useRouter();
+  const { token } = useSupabaseSession();
 
   // --- ① State（箱）の準備 ---
   const [name, setName] = useState(""); // 新規作成だから入力欄は空のためuseEffect不要
@@ -17,11 +18,16 @@ export default function AdminNewCategory() {
     setIsLoading(true);
 
     try {
+      if (!token) return;
+
       const res = await fetch(
         `/api/admin/categories`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            Authorization: token,
+           },
           body: JSON.stringify({name})
         }
       )
@@ -36,6 +42,7 @@ export default function AdminNewCategory() {
         setIsLoading(false);
       }
     } catch(err) {
+      console.error(err);
       alert("通信エラーが発生しました");
       setIsLoading(false);
     }

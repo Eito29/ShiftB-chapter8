@@ -4,16 +4,20 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PostType } from "../../_types/Post";
 import Image from "next/image";
+import { supabase } from "@/utils/supabase";
 
 export default function Post() {
-  // 1. URLから「どの記事か」を読み取る
+  // URLから「どの記事か」を読み取る
   // { id: "123" } のような形で入ってくるので、定数 id に代入。
   const { id } = useParams<{ id: string }>();
 
-  // 2. 記事データを入れる箱の準備
+  // 記事データを入れる箱の準備
   // 最初はデータがないので null（何もない）を入れておく。
   // <PostType | null> は「記事データか、空っぽの状態のどちらかだよ」という意味。
   const [post, setPost] = useState<PostType | null>(null);
+
+  // 表示用のフルURLを管理する
+  const [thumbnailImageUrl, setThumbnailImageUrl] = useState<string | null>(null)
 
   // 3. IDを元に、特定の記事を1つだけ取ってくる
   useEffect(() => {
@@ -25,6 +29,15 @@ export default function Post() {
 
       // APIから返ってきた「data.post」をsetPostに入れる
       setPost(data.post);
+
+      // 記事データが取れたら、画像のURLを生成する
+      if (data.post?.thumbnailImageKey) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('post_thumbnail')
+          .getPublicUrl(data.post.thumbnailImageKey)
+        
+        setThumbnailImageUrl(publicUrl)
+      }
     };
 
     // IDが存在するときだけ、データ取得を実行する
@@ -33,17 +46,17 @@ export default function Post() {
     }
   }, [id]); // 「URLのIDが変わったら、もう一度この作業をやり直してね」という合図。
 
-  // 4. データの到着待ち（ガード）
+  // データの到着待ち（ガード）
   // APIからデータが届くまでは null なので表示されるまで表示。
   if (!post) return <div>読み込み中（Loading...）</div>;
 
-  // 5. 記事の表示
+  // 記事の表示
   return (
     <div className='container'>
       <div className='block mb-5'>
         {/* 画像の表示（存在チェックを入れて安全にする） */}
-        {post.thumbnailUrl && (
-          <Image src={post.thumbnailUrl} width={800} height={400} alt={`${post.title}の画像`} />
+        {thumbnailImageUrl && (
+          <Image src={thumbnailImageUrl} width={800} height={400} alt={`${post.title}の画像`} />
         )}
       </div>
 

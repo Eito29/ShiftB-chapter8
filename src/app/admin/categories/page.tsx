@@ -1,23 +1,32 @@
 "use client"
 
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { Category } from "@/app/_types/Category";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function AdminCategories() {
-  // --- ① State（データの保管場所） ---
+  const { token } = useSupabaseSession();
   const [categories, setCategories] = useState<Category[]>([]);
 
-  // --- ② 画面が表示された時の処理 ---
   useEffect(() => {
+    if (!token) return;
+
     const getCategories = async() => {
-      const res = await fetch("/api/admin/categories");
+      const res = await fetch(
+        "/api/admin/categories", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          }
+        }
+      );
       const data = await res.json();
 
       setCategories(data.categories);
     }
     getCategories();
-  }, []);
+  }, [token]);
 
   return (
     <>

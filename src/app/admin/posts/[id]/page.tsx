@@ -3,30 +3,41 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PostForm } from "../_components/PostForm";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 export default function AdminPost() {
   const { id } = useParams<{ id: string }>(); // パラメーターからid取得
   const router = useRouter(); // 画面移動（リダイレクト）のために使う
+  const { token } = useSupabaseSession();
 
   // 各入力項目の状態（State）
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [thumbnailImageKey, setThumbnailImageKey] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<number>(0); // 選択中カテゴリーIDの箱
   const [isLoading, setIsLoading] = useState(false);
 
   // 1. 最初にデータを読み込む（表示用）
   useEffect(() => {
     if (!id) return; // ← id 未確定ガード（不具合防止）
+    if (!token) return;
+
     const fetchPost = async () => {
-      const res = await fetch(`/api/admin/posts/${id}`);
+      const res = await fetch(
+        `/api/admin/posts/${id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          }
+        }
+      );
       const data = await res.json();
 
       // 1. 記事の各項目をセット
       const post = data.post; // dataの中にあるpostオブジェクトを取り出す
       setTitle(post.title); // タイトルをセット
       setContent(post.content); // 内容をセット
-      setThumbnailUrl(post.thumbnailUrl); // サムネイルURLをセット
+      setThumbnailImageKey(post.thumbnailImageKey); // サムネイルURLをセット
 
       // 2. 最後に「どれを選ぶか」をセットする
       if (post.postCategories && post.postCategories.length > 0) {
@@ -35,7 +46,7 @@ export default function AdminPost() {
       }
     };
     fetchPost();
-  }, [id]); // idが変わるたびに再実行
+  }, [id, token]); // idが変わるたびに再実行
 
   /**
    * 削除ボタンを押した時の処理
@@ -76,7 +87,7 @@ export default function AdminPost() {
       body: JSON.stringify({
         title,
         content,
-        thumbnailUrl,
+        thumbnailImageKey,
         categories: [{ id: selectedCategoryId }] // APIが期待する { id: number }[] の形式に合わせる
       }),
     });
@@ -100,8 +111,8 @@ export default function AdminPost() {
         setTitle={setTitle}
         content={content}
         setContent={setContent}
-        thumbnailUrl={thumbnailUrl}
-        setThumbnailUrl={setThumbnailUrl}
+        thumbnailImageKey={thumbnailImageKey}
+        setThumbnailImageKey={setThumbnailImageKey}
         selectedCategoryId={selectedCategoryId}
         setSelectedCategoryId={setSelectedCategoryId}
         handleSubmit={handleSubmit}

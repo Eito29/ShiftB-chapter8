@@ -14,8 +14,8 @@ export default function Home() {
 
       const res = await fetch('/api/posts');
       const data = await res.json();
+      
       setPosts(data.posts);
-
       setLoading(false);
     }
 
@@ -26,7 +26,7 @@ export default function Home() {
     return <div className="container p-10">読み込み中…</div>;
   } 
 
-  if (posts.length === 0) {
+  if (!posts || posts.length === 0) {
     return <div className="container p-10">データが見つかりませんでした。</div>;
   }
 

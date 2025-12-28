@@ -4,7 +4,6 @@
 // where: すべての命令に where: { id: Number(id) } がついているのは、「どの記事に対して操作するか」をハッキリさせるため。これを忘れるとDBがパニックになるから大事！
 
 import { NextRequest, NextResponse } from "next/server";
-import { main } from "../route";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -13,7 +12,7 @@ const prisma = new PrismaClient();
  * 詳細取得用API（GET）
  * URLにあるIDを使って、特定の記事を1つだけ取ってくる
  */
-export const GET = async(req: NextRequest, { params }: { params: {id: string}}) => { 
+export const GET = async(_req: NextRequest, { params }: { params: {id: string}}) => { 
   try {
     // 修正ポイント：文字列の id を数値（Number）に変換する
     const postId = Number(params.id);
@@ -48,16 +47,14 @@ export const GET = async(req: NextRequest, { params }: { params: {id: string}}) 
 export const PUT = async(req: NextRequest, { params }: { params: {id: string}}) => {
   try {
     const { id } = params; // どの記事を直すかIDをキャッチ
-    await main();
-
-    const {title, content, thumbnailUrl, postCategories} = await req.json(); // 画面から送られてきた新しいタイトルと内容を受け取る
+    const {title, content, thumbnailImageKey, postCategories} = await req.json(); // 画面から送られてきた新しいタイトルと内容を受け取る
     
     // 指定したIDの記事を、新しいデータで「更新（update）」する
     const post = await prisma.post.update({
       data: { 
         title,
         content,
-        thumbnailUrl,
+        thumbnailImageKey,
         postCategories: {
           // ① 今紐付いているカテゴリーを一旦すべて解除（削除）する
           deleteMany: {}, 
@@ -80,10 +77,9 @@ export const PUT = async(req: NextRequest, { params }: { params: {id: string}}) 
  * 削除用API（DELETE）
  * いらなくなった記事をDBから消し去る
  */
-export const DELETE = async(req: NextRequest, { params }: { params: {id: string}}) => {
+export const DELETE = async(_req: NextRequest, { params }: { params: {id: string}}) => {
   try {
     const { id } = params; // 消したい記事のIDを受け取る
-    await main();
 
     // 指定したIDの記事を「削除（delete）」する
     const post = await prisma.post.delete({

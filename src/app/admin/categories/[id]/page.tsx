@@ -3,18 +3,29 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CategoryForm } from "../_components/CategoryForm";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 export default function AdminCategory() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { token } = useSupabaseSession();
 
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   // --- 画面表示時に現在のカテゴリー情報を取得 ---
   useEffect(() => {
+    if (!token) return;
+
     const getCategory = async () => {
-      const res = await fetch(`/api/admin/categories/${id}`);
+      const res = await fetch(
+        `/api/admin/categories/${id}`, {
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: token,
+          }
+        }
+      );
       const data = await res.json();
 
       // [ポイント] APIのレスポンスが { status: "OK", category: { name: "..." } } なので
@@ -24,7 +35,7 @@ export default function AdminCategory() {
       }
     }
     getCategory();
-  }, [id]);
+  }, [id, token]);
 
   /* 更新ボタン処理 (PUT) */
   const handleSubmit = async () => {
@@ -70,6 +81,7 @@ export default function AdminCategory() {
         setIsLoading(false);
       }
     } catch (err) {
+      console.error(err);
       alert("通信エラーが発生しました");
       setIsLoading(false);
     }
