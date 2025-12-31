@@ -152,7 +152,7 @@ export const PostForm: React.FC<Props> = ({
           className="w-full mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         {thumbnailImageUrl && (
-          <Image src={thumbnailImageUrl} alt="サムネイル" className="mt-2 max-h-40" />
+          <img src={thumbnailImageUrl} alt="サムネイル" className="mt-2 max-h-40" />
         )}
       </div>
 

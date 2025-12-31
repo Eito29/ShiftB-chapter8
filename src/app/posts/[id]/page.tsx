@@ -56,7 +56,7 @@ export default function Post() {
       <div className='block mb-5'>
         {/* 画像の表示（存在チェックを入れて安全にする） */}
         {thumbnailImageUrl && (
-          <Image src={thumbnailImageUrl} width={800} height={400} alt={`${post.title}の画像`} />
+          <img src={thumbnailImageUrl} alt={`${post.title}の画像`} />
         )}
       </div>
 
