@@ -10,10 +10,10 @@
 
 import { Category } from "@/app/_types/Category";
 import { ChangeEvent, useEffect, useState } from "react";
-import Image from 'next/image';
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { supabase } from '@/utils/supabase'
 import { v4 as uuidv4 } from 'uuid'  // 固有IDを生成するライブラリ
+import Image from "next/image";
 
 interface Props {
   mode: "new" | "edit";
@@ -142,7 +142,7 @@ export const PostForm: React.FC<Props> = ({
         />
       </div>
 
-      <div className="mb-6">
+      <div className="mb-6 relative w-full h-[400px]">
         <label htmlFor="thumbnailImageKey" className="font-bold">サムネイルURL</label><br />
         <input
           type="file"
@@ -152,7 +152,7 @@ export const PostForm: React.FC<Props> = ({
           className="w-full mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         {thumbnailImageUrl && (
-          <img src={thumbnailImageUrl} alt="サムネイル" className="mt-2 max-h-40" />
+          <Image src={thumbnailImageUrl} fill className="object-cover" alt="サムネイル" />
         )}
       </div>
 

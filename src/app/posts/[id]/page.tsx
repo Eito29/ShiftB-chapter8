@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { PostType } from "../../_types/Post";
 import { supabase } from "@/utils/supabase";
+import Image from "next/image";
 import useSWR from "swr";
 import { fetcher } from "@/app/_hooks/fetcher";
 
@@ -35,10 +36,10 @@ export default function Post() {
   // 記事の表示
   return (
     <div className='container'>
-      <div className='block mb-5'>
+      <div className='block mb-5 relative w-full h-[400px]'>
         {/* 画像の表示（存在チェックを入れて安全にする） */}
         {thumbnailImageUrl && (
-          <img src={thumbnailImageUrl} alt={`${post.title}の画像`} />
+          <Image src={thumbnailImageUrl} fill className="object-cover" alt={`${post.title}の画像`} />
         )}
       </div>
 
