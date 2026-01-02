@@ -3,30 +3,21 @@
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { Category } from "@/app/_types/Category";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import useSWR from 'swr';
+import { authFetcher } from "@/app/_hooks/fetcher";
 
 export default function AdminCategories() {
   const { token } = useSupabaseSession();
-  const [categories, setCategories] = useState<Category[]>([]);
 
-  useEffect(() => {
-    if (!token) return;
+  // useSWR の中で fetcher を使う
+  const { data } = useSWR(
+    token ? ["/api/admin/categories", token] : null, 
+    authFetcher
+  );
 
-    const getCategories = async() => {
-      const res = await fetch(
-        "/api/admin/categories", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          }
-        }
-      );
-      const data = await res.json();
-
-      setCategories(data.categories);
-    }
-    getCategories();
-  }, [token]);
+  // data の中から categories を取り出す
+  // データが届く前は空配列 [] になるようにしておくとエラーを防げる
+  const categories: Category[] = data?.categories || [];
 
   return (
     <>

@@ -3,45 +3,29 @@
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { PostType } from "@/app/_types/Post";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import useSWR from "swr";
+import { authFetcher } from "@/app/_hooks/fetcher";
 
 export default function AdminPosts() {
   const { token } = useSupabaseSession();
-  const [posts, setPosts] = useState<PostType[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!token) return;
+  // 2. useSWR を使う（useState と useEffect がこれ1行になっている）
+  // トークンがない間はリクエストしないように条件分岐を追加
+  const { data, isLoading, error } = useSWR(
+    token ? ['/api/admin/posts', token] : null, authFetcher
+  );
 
-    const fetchAllPosts = async () => {
-      try {
-        const res = await fetch("/api/admin/posts", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token, // Header に token を付与
-          }
-        })
+  // 3. ローディング状態の判定
+  if (isLoading) {
+    return <div className="container p-10">読み込み中…</div>;
+  }
 
-        const data = await res.json();
+  // 4. エラーまたはデータが空の場合の判定
+  // data.posts が存在するかチェック
+  const posts = data?.posts;
 
-        setPosts(data.posts);
-      } catch (error) {
-        console.error(error);
-        alert("エラーが発生したため、取得できませんでした");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAllPosts();
-  }, [token]);
-
-  if (loading) {
-    return (
-      <div className="p-7">
-        <p className="text-gray-500">読み込み中...</p>
-      </div>
-    );
+  if (error || !posts || posts.length === 0) {
+    return <div className="container p-10">データが見つかりませんでした。</div>;
   }
 
   return (
@@ -54,18 +38,23 @@ export default function AdminPosts() {
           </Link>
         </div>
 
-        {posts?.map((post: PostType) => {
-          return (
-            <Link href={`/admin/posts/${post.id}`} key={post.id}>
-              <div className="border-b border-gray-300 p-4 hover:bg-gray-100 cursor-pointer">
-                <div className="text-xl font-bold">{post.title}</div>
-                <div className="text-gray-500">
-                  {new Date(post.createdAt).toLocaleDateString()}
+        {posts.length === 0 ? (
+          <div className="text-gray-500">記事が見つかりませんでした。</div>
+        ) : (
+          // 記事があるときのみmapを回す
+          posts.map((post: PostType) => {
+            return (
+              <Link href={`/admin/posts/${post.id}`} key={post.id}>
+                <div className="border-b border-gray-300 p-4 hover:bg-gray-100 cursor-pointer">
+                  <div className="text-xl font-bold">{post.title}</div>
+                  <div className="text-gray-500">
+                    {new Date(post.createdAt).toLocaleDateString()}
+                  </div>
                 </div>
-              </div>
-            </Link>
-          );
-        })}
+              </Link>
+            );
+          })
+        )}
       </div>
     </>
   )
