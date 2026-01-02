@@ -15,8 +15,15 @@ export default function AdminNewCategory() {
 
   // --- ③ 更新ボタンを押した時の処理（handleSubmit） ---
   const handleSubmit = async () => {
-    setIsLoading(true);
+    // 未入力チェック
+    // .trim()でスペースキーだけの入力を防げる
+    if (!name.trim()) {
+      alert("カテゴリー名を入力してください");
+      return; // ここで処理を終了し、APIを叩かない
+    }
 
+    setIsLoading(true);
+    
     try {
       if (!token) return;
 

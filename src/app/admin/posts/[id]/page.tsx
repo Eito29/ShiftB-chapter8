@@ -80,6 +80,10 @@ export default function AdminPost() {
     if (!token) return;
     setIsSubmitting(true);
 
+    // selectedCategoryId が 0 以上の（有効な）時だけ配列に含め、
+    // 未選択(0)の時は空の配列 [] を送るようにする
+    const categoriesToSend = selectedCategoryId > 0 ? [{ id: selectedCategoryId }] : [];
+
     // サーバーの更新用API(PUT)を叩く
     const res = await fetch(`/api/admin/posts/${id}`, {
       method: "PUT",
@@ -92,7 +96,7 @@ export default function AdminPost() {
         title,
         content,
         thumbnailImageKey,
-        categories: [{ id: selectedCategoryId }] // APIが期待する { id: number }[] の形式に合わせる
+        categories: categoriesToSend // 85行目参照
       }),
     });
 

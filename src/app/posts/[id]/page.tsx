@@ -36,10 +36,12 @@ export default function Post() {
   // 記事の表示
   return (
     <div className='container'>
-      <div className='block mb-5 relative w-full h-[400px]'>
+      <div className='block mb-5'>
         {/* 画像の表示（存在チェックを入れて安全にする） */}
         {thumbnailImageUrl && (
-          <Image src={thumbnailImageUrl} fill className="object-cover" alt={`${post.title}の画像`} />
+          <div className="relative w-full h-[400px] mt-3">
+            <Image src={thumbnailImageUrl} fill className="object-cover" alt={`${post.title}の画像`} />
+          </div>
         )}
       </div>
 

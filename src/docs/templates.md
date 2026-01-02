@@ -26,8 +26,6 @@ export const authFetcher = ([url, token]: [string, string]) =>
     }
   }).then(res => res.json());
 
-
-
 // 1. 閲覧画面 (記事一覧・詳細)
 // SEOよりもユーザー体験やキャッシュの速さを優先する場合の構成。
 

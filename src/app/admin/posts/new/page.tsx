@@ -20,6 +20,17 @@ export default function AdminNewPost() {
   const handleSubmit = async () => {
     if (!token) return;
 
+    // 未入力チェック
+    // .trim()でスペースキーだけの入力を防げる
+    if (!title.trim()) {
+      alert("タイトルを入力してください");
+      return; // ここで処理を終了し、APIを叩かない
+    }
+
+    setIsLoading(true);
+
+    const categoriesToSend = selectedCategoryId > 0 ? [{ id: selectedCategoryId }] : [];
+
     // サーバーへデータを送る準備
     const res = await fetch(
       `/api/admin/posts`,
@@ -34,8 +45,7 @@ export default function AdminNewPost() {
             title,
             content,
             thumbnailImageKey,
-            // API側の期待するキー名 'categories' に合わせて送る
-            categories: [{id: selectedCategoryId}] 
+            categories: categoriesToSend
           }
         )
       }
