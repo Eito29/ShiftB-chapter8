@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { supabase } from '@/utils/supabase';
 
 const prisma = new PrismaClient()
 
 /////////////////////// 管理者_記事詳細取得API
 export const GET = async ( request: NextRequest, { params }: { params: { id: string } }) => {
   const { id } = params; // URLパラメータから記事IDを取得
+
+  // ログイン判定
+  const token = request.headers.get('Authorization') ?? ''
+  const { error } = await supabase.auth.getUser(token)
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 400 })
 
   try {
     const post = await prisma.post.findUnique({
@@ -40,13 +47,18 @@ interface UpdatePostRequestBody {
   title: string
   content: string
   categories: { id: number }[] // 更新後のカテゴリーIDリスト
-  thumbnailUrl: string
+  thumbnailImageKey: string
 }
 
 export const PUT = async ( request: NextRequest, { params }: { params: { id: string } }, ) => {
   const { id } = params;
   // リクエストボディから更新データを取り出す
-  const { title, content, categories, thumbnailUrl }: UpdatePostRequestBody = await request.json();
+  const { title, content, categories, thumbnailImageKey }: UpdatePostRequestBody = await request.json();
+
+  const token = request.headers.get('Authorization') ?? ''
+  const { error } = await supabase.auth.getUser(token)
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 400 })
 
   try {
     // 1. 記事本体（タイトル、内容、画像URL）を更新
@@ -57,7 +69,7 @@ export const PUT = async ( request: NextRequest, { params }: { params: { id: str
       data: {
         title,
         content,
-        thumbnailUrl,
+        thumbnailImageKey,
       },
     })
 
@@ -94,6 +106,12 @@ export const PUT = async ( request: NextRequest, { params }: { params: { id: str
 // DELETEという命名にすることで、DELETEメソッドのリクエスト時に実行される
 export const DELETE = async ( request: NextRequest, { params }: { params: { id: string } }) => {
   const { id } = params;
+
+  // ログイン判定
+  const token = request.headers.get('Authorization') ?? ''
+  const { error } = await supabase.auth.getUser(token)
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 400 })
 
   try {
     // 指定されたIDの記事を削除

@@ -5,24 +5,11 @@ import { NextRequest, NextResponse } from "next/server";
 const prisma = new PrismaClient();
 
 /**
- * DB接続用
- * 「今からDB使うよ！」という挨拶。失敗したらエラーを投げる
- */
-export async function main() {
-  try {
-    await prisma.$connect(); // トンネルをつなぐイメージ
-  } catch (err) {
-    return Error("DB取得エラー");
-  }
-};
-
-/**
  * 一覧取得API（GET）
  * フロントから「記事一覧ちょうだい」と言われたら動く
  */
-export const GET = async(req: NextRequest, res: NextResponse) => {
+export const GET = async() => {
   try {
-    await main(); // まず接続確認
     const posts = await prisma.post.findMany({ // postテーブルのデータを全部持ってくる
       // ここが重要：中間テーブルとその先のカテゴリを合体させて取得する
       include: {
@@ -46,17 +33,16 @@ export const GET = async(req: NextRequest, res: NextResponse) => {
  * 投稿API（POST）
  * 新しく記事を書きたい時に、タイトルと内容を受け取ってDBに保存する
  */
-export const POST = async(req: NextRequest, res: NextResponse) => {
+export const POST = async(req: NextRequest) => {
   try {
-    await main(); // まず接続
-    const { title, content, thumbnailUrl} = await req.json(); // 画面から送られてきたタイトルと内容を取り出す
+    const { title, content, thumbnailImageKey} = await req.json(); // 画面から送られてきたタイトルと内容を取り出す
     
     // DBに新しいデータを作る（作成したデータが post に入る）
     const post = await prisma.post.create({ 
       data: {
         title, 
         content,
-        thumbnailUrl
+        thumbnailImageKey
       }
     }); 
 

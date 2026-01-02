@@ -1,23 +1,23 @@
 "use client"
 
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { Category } from "@/app/_types/Category";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import useSWR from 'swr';
+import { authFetcher } from "@/app/_hooks/fetcher";
 
 export default function AdminCategories() {
-  // --- ① State（データの保管場所） ---
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { token } = useSupabaseSession();
 
-  // --- ② 画面が表示された時の処理 ---
-  useEffect(() => {
-    const getCategories = async() => {
-      const res = await fetch("/api/admin/categories");
-      const data = await res.json();
+  // useSWR の中で fetcher を使う
+  const { data } = useSWR(
+    token ? ["/api/admin/categories", token] : null, 
+    authFetcher
+  );
 
-      setCategories(data.categories);
-    }
-    getCategories();
-  }, []);
+  // data の中から categories を取り出す
+  // データが届く前は空配列 [] になるようにしておくとエラーを防げる
+  const categories: Category[] = data?.categories || [];
 
   return (
     <>
