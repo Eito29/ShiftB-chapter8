@@ -4,22 +4,22 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CategoryForm } from "../_components/CategoryForm";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import useSWR, { useSWRConfig } from "swr";
-import { authFetcher } from "@/app/_hooks/fetcher";
+import { useFetch } from "@/app/_hooks/useFetch";
+import { CategoryResponse } from "@/app/_types/Category";
 
 export default function AdminCategory() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { token } = useSupabaseSession();
-  const { mutate } = useSWRConfig(); // キャッシュ更新用
+
+  // 1. カスタムフックを1行で呼び出す
+  // mutate もここから取得したものを使う
+  const { data, error, isLoading, mutate } = useFetch<CategoryResponse>(
+    id ? `/api/admin/categories/${id}` : null
+  );
+
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // 1. useSWRでカテゴリーデータを取得
-  const { data, error, isLoading: isDataLoading } = useSWR(
-    token && id ? [`/api/admin/categories/${id}`, token] : null,
-    authFetcher
-  );
 
   // 2. 取得したデータをフォームの初期値にセット
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function AdminCategory() {
   }, [data]);
 
   // ローディング中、もしくはエラー時の処理
-  if (isDataLoading) return <div className="p-7">読み込み中...</div>;
+  if (isLoading) return <div className="p-7">読み込み中...</div>;
   if (error) return <div className="p-7 text-red-500">データの取得に失敗しました</div>;
 
   /* 更新ボタン処理 (PUT) */
@@ -50,9 +50,8 @@ export default function AdminCategory() {
       });
 
       if (res.ok) {
-        // 一覧と自分自身のデータを再取得させる
-        mutate(['/api/admin/categories', token]);
-        mutate([`/api/admin/categories/${id}`, token]);
+        // 画面上の data が最新の { name } に更新される
+        await mutate();
         alert("更新完了しました");
       } else {
         alert("更新に失敗しました");
@@ -77,7 +76,7 @@ export default function AdminCategory() {
       });
 
       if (res.ok) {
-        mutate(['/api/admin/categories', token]); // 一覧キャッシュを消す
+        // 削除後はデータが存在しないので mutate は不要。
         alert("削除完了しました");
         router.push("/admin/categories");
       } else {
