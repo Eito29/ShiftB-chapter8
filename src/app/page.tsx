@@ -1,39 +1,27 @@
 "use client"
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import type { PostType } from '@/app/_types/Post';
+import type { PostsResponse, PostType } from '@/app/_types/Post';
+import { useFetch } from "./_hooks/useFetch";
 
 export default function Home() {
-  const [posts, setPosts] = useState<PostType[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  // データの取得
+  const { data, error, isLoading } = useFetch<PostsResponse>('/api/posts');
 
-  useEffect(() => {
-    const getData = async () => {
-      setLoading(true);
+  // data.posts が存在するかチェック
+  const posts = data?.posts;
 
-      const res = await fetch('/api/posts');
-      const data = await res.json();
-      setPosts(data.posts);
-
-      setLoading(false);
-    }
-
-    getData();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return <div className="container p-10">読み込み中…</div>;
-  } 
-
-  if (posts.length === 0) {
+  }
+  if (error || !posts || posts.length === 0) {
     return <div className="container p-10">データが見つかりませんでした。</div>;
   }
 
   return (
     <div className="container">
       {/* posts 配列を map で1つずつ取り出す → post という変数に代入 */}
-      {posts.map((post) => (
+      {posts.map((post: PostType) => (
         <Link href={`/posts/${post.id}`} key={post.id}>
           <div className="border border-solid mb-5 p-4">
             <div className="flex justify-between mb-2">

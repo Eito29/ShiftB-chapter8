@@ -1,23 +1,17 @@
 "use client"
 
-import { Category } from "@/app/_types/Category";
+import { useFetch } from "@/app/_hooks/useFetch";
+import { CategoriesResponse, Category } from "@/app/_types/Category";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 export default function AdminCategories() {
-  // --- ① State（データの保管場所） ---
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { data, isLoading, error } = useFetch<CategoriesResponse>("/api/admin/categories");
 
-  // --- ② 画面が表示された時の処理 ---
-  useEffect(() => {
-    const getCategories = async() => {
-      const res = await fetch("/api/admin/categories");
-      const data = await res.json();
+  // データが届く前は空配列 [] になるようにしておくとエラーを防げる
+  const categories = data?.categories || [];
 
-      setCategories(data.categories);
-    }
-    getCategories();
-  }, []);
+  if (isLoading) return <div className="p-7">読み込み中…</div>;
+  if (error) return <div className="p-7 text-red-500">エラーが発生しました</div>;
 
   return (
     <>

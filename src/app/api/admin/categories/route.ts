@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { supabase } from '@/utils/supabase';
 
 const prisma = new PrismaClient()
 
 /////////////////// 管理者_カテゴリー一覧取得API
 export const GET = async (request: NextRequest) => {
+  // ログイン判定
+  const token = request.headers.get('Authorization') ?? ''
+  const { error } = await supabase.auth.getUser(token)
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 400 })
+  
   try {
     const categories = await prisma.category.findMany({
       orderBy: {
@@ -24,7 +31,13 @@ interface CreateRequestCategory {
   name: string
 }
 
-export const POST = async (request: NextRequest, context: any) => {
+export const POST = async (request: NextRequest) => {
+  // ログイン判定
+  const token = request.headers.get('Authorization') ?? ''
+  const { error } = await supabase.auth.getUser(token)
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 400 })
+  
   try {
     const body = await request.json();
     const { name }: CreateRequestCategory = body;

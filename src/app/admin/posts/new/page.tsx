@@ -2,34 +2,50 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { PostForm } from "../_components/PostForm";
 
 export default function AdminNewPost() {
   const router = useRouter(); // 作成完了後に画面を移動させるために使用
+  const { token } = useSupabaseSession();
 
   // --- ① State（箱）の準備 ---
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [thumbnailImageKey, setThumbnailImageKey] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<number>(0); // ユーザーが選んだカテゴリーID
   const [isLoading, setIsLoading] = useState(false);
 
   // --- ③ ボタンを押した時の処理（handleSubmit） ---
   const handleSubmit = async () => {
+    if (!token) return;
+
+    // 未入力チェック
+    // .trim()でスペースキーだけの入力を防げる
+    if (!title.trim()) {
+      alert("タイトルを入力してください");
+      return; // ここで処理を終了し、APIを叩かない
+    }
+
+    setIsLoading(true);
+
+    const categoriesToSend = selectedCategoryId > 0 ? [{ id: selectedCategoryId }] : [];
 
     // サーバーへデータを送る準備
     const res = await fetch(
       `/api/admin/posts`,
       {
         method: "POST", // 新規作成なのでPOSTメソッド
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
         body: JSON.stringify(
           {
             title,
             content,
-            thumbnailUrl,
-            // API側の期待するキー名 'categories' に合わせて送る
-            categories: [{id: selectedCategoryId}] 
+            thumbnailImageKey,
+            categories: categoriesToSend
           }
         )
       }
@@ -60,8 +76,8 @@ export default function AdminNewPost() {
         setTitle={setTitle}
         content={content}
         setContent={setContent}
-        thumbnailUrl={thumbnailUrl}
-        setThumbnailUrl={setThumbnailUrl}
+        thumbnailImageKey={thumbnailImageKey}
+        setThumbnailImageKey={setThumbnailImageKey}
         selectedCategoryId={selectedCategoryId}
         setSelectedCategoryId={setSelectedCategoryId}
         handleSubmit={handleSubmit}

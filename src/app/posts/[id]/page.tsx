@@ -1,49 +1,48 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { PostType } from "../../_types/Post";
+import { PostResponse } from "../../_types/Post";
+import { supabase } from "@/utils/supabase";
 import Image from "next/image";
+import { useFetch } from "@/app/_hooks/useFetch";
 
 export default function Post() {
-  // 1. URLから「どの記事か」を読み取る
-  // { id: "123" } のような形で入ってくるので、定数 id に代入。
+  // 先にIDを取得する
   const { id } = useParams<{ id: string }>();
 
-  // 2. 記事データを入れる箱の準備
-  // 最初はデータがないので null（何もない）を入れておく。
-  // <PostType | null> は「記事データか、空っぽの状態のどちらかだよ」という意味。
-  const [post, setPost] = useState<PostType | null>(null);
+  const { data, error, isLoading } = useFetch<PostResponse>(
+    id ? `/api/posts/${id}` : null
+  );
 
-  // 3. IDを元に、特定の記事を1つだけ取ってくる
-  useEffect(() => {
-    const fetchPost = async () => {
-      
-      // 指定されたIDを使って、APIに「この記事の詳細をちょうだい」とリクエスト
-      const res = await fetch(`/api/posts/${id}`);
-      const data = await res.json();
+  const post = data?.post;
 
-      // APIから返ってきた「data.post」をsetPostに入れる
-      setPost(data.post);
-    };
+  if (isLoading) {
+    return <div className="container p-10">読み込み中…</div>;
+  }
+  if (error || !post) {
+    return <div className="container p-10">データが見つかりませんでした。</div>;
+  }
 
-    // IDが存在するときだけ、データ取得を実行する
-    if (id) {
-      fetchPost();
-    }
-  }, [id]); // 「URLのIDが変わったら、もう一度この作業をやり直してね」という合図。
+  // 3. サムネイル画像のURL生成
+  // getPublicUrlは同期処理なので、useEffectを使わず直接計算してOK
+  let thumbnailImageUrl = null;
+  if (post.thumbnailImageKey) {
+    const { data: { publicUrl } } = supabase.storage
+      .from('post_thumbnail')
+      .getPublicUrl(post.thumbnailImageKey);
+    
+    thumbnailImageUrl = publicUrl;
+  }
 
-  // 4. データの到着待ち（ガード）
-  // APIからデータが届くまでは null なので表示されるまで表示。
-  if (!post) return <div>読み込み中（Loading...）</div>;
-
-  // 5. 記事の表示
+  // 記事の表示
   return (
     <div className='container'>
       <div className='block mb-5'>
         {/* 画像の表示（存在チェックを入れて安全にする） */}
-        {post.thumbnailUrl && (
-          <Image src={post.thumbnailUrl} width={800} height={400} alt={`${post.title}の画像`} />
+        {thumbnailImageUrl && (
+          <div className="relative w-full h-[400px] mt-3">
+            <Image src={thumbnailImageUrl} fill className="object-cover" alt={`${post.title}の画像`} />
+          </div>
         )}
       </div>
 

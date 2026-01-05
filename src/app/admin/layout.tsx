@@ -2,12 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRouteGuard } from "../_hooks/useRouteGuard";
 
 export default function AdminLayout({ children }: Readonly<{ children: React.ReactNode; }>) {
-  // 1. 現在表示されているページのパスを取得（例: "/admin/posts"）
+  // 「ログインしていないユーザーを強制的にログイン画面へリダイレクトさせる（追い返す）」ためのカスタムフックの呼び出し
+  useRouteGuard();
+
+  // 現在表示されているページのパスを取得（例: "/admin/posts"）
   const pathname = usePathname(); 
 
-  // 2. 選択判定用の関数
+  // 選択判定用の関数
   // 引数の href が現在のURLに含まれているかチェックし、true/false を返す
   const isSelected = (href: string) => {
     return pathname.includes(href)
