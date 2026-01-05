@@ -1,23 +1,17 @@
 "use client"
 
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { Category } from "@/app/_types/Category";
+import { useFetch } from "@/app/_hooks/useFetch";
+import { CategoriesResponse, Category } from "@/app/_types/Category";
 import Link from "next/link";
-import useSWR from 'swr';
-import { authFetcher } from "@/app/_hooks/fetcher";
 
 export default function AdminCategories() {
-  const { token } = useSupabaseSession();
+  const { data, isLoading, error } = useFetch<CategoriesResponse>("/api/admin/categories");
 
-  // useSWR の中で fetcher を使う
-  const { data } = useSWR(
-    token ? ["/api/admin/categories", token] : null, 
-    authFetcher
-  );
-
-  // data の中から categories を取り出す
   // データが届く前は空配列 [] になるようにしておくとエラーを防げる
-  const categories: Category[] = data?.categories || [];
+  const categories = data?.categories || [];
+
+  if (isLoading) return <div className="p-7">読み込み中…</div>;
+  if (error) return <div className="p-7 text-red-500">エラーが発生しました</div>;
 
   return (
     <>

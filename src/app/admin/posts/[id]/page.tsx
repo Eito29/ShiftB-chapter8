@@ -3,15 +3,18 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PostForm } from "../_components/PostForm";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import useSWR, { useSWRConfig } from "swr";
-import { authFetcher } from "@/app/_hooks/fetcher";
+import { useFetch } from "@/app/_hooks/useFetch";
+import { PostResponse } from "@/app/_types/Post";
 
 export default function AdminPost() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { token } = useSupabaseSession();
-  const { mutate } = useSWRConfig(); // 一覧などのキャッシュ更新用
+
+  // useFetchから必要なものをすべて取り出す
+  // token: 通信(PUT/DELETE)用, mutate: 画面更新用
+  const { data, error, isLoading: isDataLoading, token, mutate } = useFetch<PostResponse>(
+    id ? `/api/admin/posts/${id}` : null
+  );
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -19,15 +22,7 @@ export default function AdminPost() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number>(0); // 選択中カテゴリーIDの箱
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 2. useSWR でデータを取得（表示・初期値用）
-  // 以前の fetchPost 関数をこれ1行に置き換え
-  const { data, error, isLoading: isDataLoading } = useSWR(
-    token && id ? [`/api/admin/posts/${id}`, token] : null,
-    authFetcher
-  );
-
-  // 3. 取得したデータをフォームの初期値にセットする
-  // SWRでデータが読み込まれたタイミングで1回だけ実行
+  // 2. 取得したデータをフォームの初期値にセットする
   useEffect(() => {
     if (data?.post) {
       const post = data.post;
@@ -36,7 +31,7 @@ export default function AdminPost() {
       setThumbnailImageKey(post.thumbnailImageKey);
 
       if (post.postCategories && post.postCategories.length > 0) {
-        setSelectedCategoryId(post.postCategories[0].categoryId);
+        setSelectedCategoryId(post.postCategories[0].category.id);
       }
     }
   }, [data]); // SWRのdataが変化した時に実行
@@ -61,7 +56,6 @@ export default function AdminPost() {
     });
 
     if (res.ok) {
-      mutate(['/api/admin/posts', token]); 
       alert("削除完了しました");
       router.push("/admin/posts");
     } else {
@@ -101,11 +95,7 @@ export default function AdminPost() {
     });
 
     if (res.ok) {
-      // 編集した内容を反映させるために自分自身のキャッシュも更新
-      mutate([`/api/admin/posts/${id}`, token]);
-      // 一覧に戻った時のために一覧のキャッシュも更新
-      mutate(['/api/admin/posts', token]);
-
+      await mutate();
       alert("更新完了しました");
     } else {
       alert("更新に失敗しました");

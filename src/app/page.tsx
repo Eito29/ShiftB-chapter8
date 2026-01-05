@@ -1,23 +1,19 @@
 "use client"
 
 import Link from "next/link";
-import type { PostType } from '@/app/_types/Post';
-import useSWR from 'swr';
-import { fetcher } from "@/app/_hooks/fetcher"; // 1. fetcherを定義
+import type { PostsResponse, PostType } from '@/app/_types/Post';
+import { useFetch } from "./_hooks/useFetch";
 
 export default function Home() {
-  // 2. useSWR を使う（useState と useEffect がこれ1行になっている）
-  const { data, error, isLoading } = useSWR('/api/posts', fetcher);
+  // データの取得
+  const { data, error, isLoading } = useFetch<PostsResponse>('/api/posts');
 
-  // 3. ローディング状態の判定
-  if (isLoading) {
-    return <div className="container p-10">読み込み中…</div>;
-  }
-
-  // 4. エラーまたはデータが空の場合の判定
   // data.posts が存在するかチェック
   const posts = data?.posts;
 
+  if (isLoading) {
+    return <div className="container p-10">読み込み中…</div>;
+  }
   if (error || !posts || posts.length === 0) {
     return <div className="container p-10">データが見つかりませんでした。</div>;
   }

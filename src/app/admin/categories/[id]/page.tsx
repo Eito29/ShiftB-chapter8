@@ -3,34 +3,30 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CategoryForm } from "../_components/CategoryForm";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useFetch } from "@/app/_hooks/useFetch";
 import { CategoryResponse } from "@/app/_types/Category";
 
 export default function AdminCategory() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { token } = useSupabaseSession();
 
-  // 1. カスタムフックを1行で呼び出す
-  // mutate もここから取得したものを使う
-  const { data, error, isLoading, mutate } = useFetch<CategoryResponse>(
+  const { data, error, isLoading, mutate, token } = useFetch<CategoryResponse>(
     id ? `/api/admin/categories/${id}` : null
   );
 
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 2. 取得したデータをフォームの初期値にセット
   useEffect(() => {
     if (data?.category) {
       setName(data.category.name);
     }
   }, [data]);
+  
+  const category = data?.category;
 
-  // ローディング中、もしくはエラー時の処理
   if (isLoading) return <div className="p-7">読み込み中...</div>;
-  if (error) return <div className="p-7 text-red-500">データの取得に失敗しました</div>;
+  if (error|| !category) return <div className="p-7 text-red-500">データの取得に失敗しました</div>;
 
   /* 更新ボタン処理 (PUT) */
   const handleSubmit = async () => {

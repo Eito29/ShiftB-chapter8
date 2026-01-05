@@ -1,28 +1,16 @@
 "use client"
 
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { PostType } from "@/app/_types/Post";
+import { useFetch } from "@/app/_hooks/useFetch";
+import { PostsResponse, PostType } from "@/app/_types/Post";
 import Link from "next/link";
-import useSWR from "swr";
-import { authFetcher } from "@/app/_hooks/fetcher";
 
 export default function AdminPosts() {
-  const { token } = useSupabaseSession();
+  const { data, isLoading, error } = useFetch<PostsResponse>('/api/admin/posts')
+  const posts = data?.posts;
 
-  // 2. useSWR を使う（useState と useEffect がこれ1行になっている）
-  // トークンがない間はリクエストしないように条件分岐を追加
-  const { data, isLoading, error } = useSWR(
-    token ? ['/api/admin/posts', token] : null, authFetcher
-  );
-
-  // 3. ローディング状態の判定
   if (isLoading) {
     return <div className="container p-10">読み込み中…</div>;
   }
-
-  // 4. エラーまたはデータが空の場合の判定
-  // data.posts が存在するかチェック
-  const posts = data?.posts;
 
   if (error || !posts || posts.length === 0) {
     return <div className="container p-10">データが見つかりませんでした。</div>;

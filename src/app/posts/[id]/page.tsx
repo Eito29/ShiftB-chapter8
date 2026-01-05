@@ -1,26 +1,27 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { PostType } from "../../_types/Post";
+import { PostResponse } from "../../_types/Post";
 import { supabase } from "@/utils/supabase";
 import Image from "next/image";
-import useSWR from "swr";
-import { fetcher } from "@/app/_hooks/fetcher";
+import { useFetch } from "@/app/_hooks/useFetch";
 
 export default function Post() {
-  // 1. 先にIDを取得する
+  // 先にIDを取得する
   const { id } = useParams<{ id: string }>();
 
-  // 2. useSWRでデータ取得
-  // idが存在しない場合は null を渡してリクエストを投げないようにする（条件付きフェッチ）
-  const { data, error, isLoading } = useSWR( id ? `/api/posts/${id}` : null, fetcher);
+  const { data, error, isLoading } = useFetch<PostResponse>(
+    id ? `/api/posts/${id}` : null
+  );
 
-  // ローディング中、もしくはエラー時の処理
-  if (isLoading) return <div>読み込み中（Loading...）</div>;
-  if (error || !data?.post) return <div>データの取得に失敗しました</div>;
+  const post = data?.post;
 
-  // post変数に格納
-  const post: PostType = data.post;
+  if (isLoading) {
+    return <div className="container p-10">読み込み中…</div>;
+  }
+  if (error || !post) {
+    return <div className="container p-10">データが見つかりませんでした。</div>;
+  }
 
   // 3. サムネイル画像のURL生成
   // getPublicUrlは同期処理なので、useEffectを使わず直接計算してOK
