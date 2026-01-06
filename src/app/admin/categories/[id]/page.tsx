@@ -18,10 +18,12 @@ export default function AdminCategory() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    // ?は「もし左側（data）が空っぽだったら、そこで止まってね（エラーにしないでね）」 という意味
     if (data?.category) {
+      // 編集用の（setName）に、書き写す
       setName(data.category.name);
     }
-  }, [data]);
+  }, [data]); // dataが変化した時だけ実行してね
   
   const category = data?.category;
 

@@ -21,11 +21,11 @@ model Post {
 
 // カテゴリーテーブル
 model Category {
-  id        Int            @id @default(autoincrement())
+  id        Int            @id @default(autoincrement()) // 整数(Int)として入力され、自動で増加(autoincrement)する主キー(id)
   name      String
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  posts     PostCategory[]
+  createdAt DateTime       @default(now()) // 日時情報(createdAt)はデフォルトで現在日時(now())を入れる
+  updatedAt DateTime       @updatedAt // 日時情報(updatedAt)は更新されるたびに現在日時を入れる(@updatedAt)
+  posts     PostCategory[] // 多対多の関係を表すフィールド
 }
 
 // ブログ記事とカテゴリーを多対多で紐付ける中間テーブル

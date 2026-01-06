@@ -18,12 +18,14 @@ export const GET = async (
       return NextResponse.json({ status: error.message }, { status: 400 })
 
   try {
+    // Prismaを使ってデータベースからカテゴリー情報を取ってくる
     const category = await prisma.category.findUnique({
       where: {
-        id: parseInt(id),
+        id: parseInt(id), // ここで「id: 1」を探しに行く
       },
     })
-
+    // この戻り値が、フロントエンドの data に入る
+    // { status: 'OK', category: { id: 1, name: 'カテゴリー１', ... } }←schema.prismaで定義した形
     return NextResponse.json({ status: 'OK', category }, { status: 200 })
   } catch (error) {
     if (error instanceof Error)

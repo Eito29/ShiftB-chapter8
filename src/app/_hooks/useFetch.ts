@@ -7,7 +7,7 @@ import { useSupabaseSession } from '@/app/_hooks/useSupabaseSession';
 import { fetcher, authFetcher } from '@/app/_hooks/fetcher';
 
 // <T> はジェネリクス（型を後から決めれるようにするためのもの　いったんT(Type)にしとこう）
-// 例えば、カテゴリーの時は CategoryResponse を流し込むイメージ
+// 例えば、コンポーネント側でuseFetch<CategoryResponse> と書けばカテゴリー用を流し込むイメージ
 export const useFetch = <T>(url: string | null) => {
   const { token, isLoading: isSessionLoading } = useSupabaseSession();
 
